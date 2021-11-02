@@ -1,13 +1,16 @@
 <template>
   <div class="max-w-screen-md mx-auto px-4 py-10">
-    <!-- Status message -->
+    <!-- Status Message -->
     <div
       v-if="statusMsg || errorMsg"
       class="mb-10 p-4 bg-light-grey rounded-md shadow-lg"
     >
-      <p class="text-at-light-green">{{ statusMsg }}</p>
+      <p class="text-at-light-green">
+        {{ statusMsg }}
+      </p>
       <p class="text-red-500">{{ errorMsg }}</p>
     </div>
+
     <!-- Create -->
     <div class="p-8 flex items-start bg-light-grey rounded-md shadow-lg">
       <!-- Form -->
@@ -67,7 +70,6 @@
                 type="text"
                 class="p-2 w-full text-gray-500 focus:outline-none"
                 v-model="item.exercise"
-                id="exercise"
               />
             </div>
             <div class="flex flex-col flex-1">
@@ -79,7 +81,6 @@
                 type="text"
                 class="p-2 w-full text-gray-500 focus:outline-none"
                 v-model="item.sets"
-                id="sets"
               />
             </div>
             <div class="flex flex-col flex-1">
@@ -91,7 +92,6 @@
                 type="text"
                 class="p-2 w-full text-gray-500 focus:outline-none"
                 v-model="item.reps"
-                id="reps"
               />
             </div>
             <div class="flex flex-col flex-1">
@@ -103,7 +103,6 @@
                 type="text"
                 class="p-2 w-full text-gray-500 focus:outline-none"
                 v-model="item.weight"
-                id="weight"
               />
             </div>
             <img
@@ -117,9 +116,9 @@
             @click="addExercise"
             type="button"
             class="mt-6 py-2 px-6 rounded-sm self-start text-sm
-                  text-white bg-at-light-green duration-200 border-solid
-                  border-2 border-transparent hover:border-at-light-green hover:bg-white
-                  hover:text-at-light-green"
+      text-white bg-at-light-green duration-200 border-solid
+      border-2 border-transparent hover:border-at-light-green hover:bg-white
+      hover:text-at-light-green"
           >
             Add Exercise
           </button>
@@ -142,12 +141,12 @@
                 v-model="item.cardioType"
               >
                 <option value="#">Select Type</option>
+                <option value="run">Run</option>
                 <option value="walk">Walk</option>
-                <option value="Run">Run</option>
               </select>
             </div>
             <div class="flex flex-col flex-1">
-              <label for="sets" class="mb-1 text-sm text-at-light-green"
+              <label for="distance" class="mb-1 text-sm text-at-light-green"
                 >Distance
               </label>
               <input
@@ -155,7 +154,6 @@
                 type="text"
                 class="p-2 w-full text-gray-500 focus:outline-none"
                 v-model="item.distance"
-                id="distance"
               />
             </div>
             <div class="flex flex-col flex-1">
@@ -167,10 +165,8 @@
                 type="text"
                 class="p-2 w-full text-gray-500 focus:outline-none"
                 v-model="item.duration"
-                id="duration"
               />
             </div>
-
             <div class="flex flex-col flex-1">
               <label for="pace" class="mb-1 text-sm text-at-light-green"
                 >Pace
@@ -180,7 +176,6 @@
                 type="text"
                 class="p-2 w-full text-gray-500 focus:outline-none"
                 v-model="item.pace"
-                id="pace"
               />
             </div>
             <img
@@ -194,9 +189,9 @@
             @click="addExercise"
             type="button"
             class="mt-6 py-2 px-6 rounded-sm self-start text-sm
-                  text-white bg-at-light-green duration-200 border-solid
-                  border-2 border-transparent hover:border-at-light-green hover:bg-white
-                  hover:text-at-light-green"
+      text-white bg-at-light-green duration-200 border-solid
+      border-2 border-transparent hover:border-at-light-green hover:bg-white
+      hover:text-at-light-green"
           >
             Add Exercise
           </button>
@@ -205,9 +200,9 @@
         <button
           type="submit"
           class="mt-6 py-2 px-6 rounded-sm self-start text-sm
-                  text-white bg-at-light-green duration-200 border-solid
-                  border-2 border-transparent hover:border-at-light-green hover:bg-white
-                  hover:text-at-light-green"
+      text-white bg-at-light-green duration-200 border-solid
+      border-2 border-transparent hover:border-at-light-green hover:bg-white
+      hover:text-at-light-green"
         >
           Record Workout
         </button>
@@ -218,6 +213,8 @@
 
 <script>
 import { ref } from 'vue';
+import { uid } from 'uid';
+import { supabase } from '../supabase/init';
 
 export default {
   name: 'create',
@@ -225,18 +222,93 @@ export default {
     // Create data
     const workoutName = ref('');
     const workoutType = ref('select-workout');
-    const exercises = ref([1]);
+    const exercises = ref([]);
     const statusMsg = ref(null);
     const errorMsg = ref(null);
     // Add exercise
+    const addExercise = () => {
+      if (workoutType.value === 'strength') {
+        exercises.value.push({
+          id: uid(),
+          exercise: '',
+          sets: '',
+          reps: '',
+          weight: '',
+        });
+
+        return;
+      } else {
+        exercises.value.push({
+          id: uid(),
+          cardioType: '',
+          distance: '',
+          duration: '',
+          pace: '',
+        });
+      }
+    };
 
     // Delete exercise
+    const deleteExercise = (id) => {
+      if (exercises.value.length > 1) {
+        exercises.value = exercises.value.filter(
+          (exercise) => exercise.id !== id
+        );
+        return;
+      }
+      errorMsg.value =
+        'Error: Cannot remove need to have at least one exercise';
+      setTimeout(() => {
+        errorMsg.value = false;
+      }, 5000);
+    };
 
     // Listens for chaging of workout type input
+    const workoutChange = () => {
+      exercises.value = [];
+      addExercise();
+    };
 
     // Create workout
+    const createWorkout = async () => {
+      try {
+        const { error } = await supabase.from('workouts').insert([
+          {
+            workoutName: workoutName.value,
+            workoutType: workoutType.value,
+            exercises: exercises.value,
+          },
+        ]);
 
-    return { workoutName, workoutType, exercises, statusMsg, errorMsg };
+        if (error) throw error;
+
+        statusMsg.value = 'Success: Workout Created!';
+        workoutName.value = null;
+        workoutType.value = 'select-workout';
+        exercises.value = [];
+
+        setTimeout(() => {
+          statusMsg.value = false;
+        }, 5000);
+      } catch (e) {
+        errorMsg.value = `Error: ${e.message}`;
+        setTimeout(() => {
+          errorMsg.value = false;
+        }, 5000);
+      }
+    };
+
+    return {
+      workoutName,
+      workoutType,
+      exercises,
+      statusMsg,
+      errorMsg,
+      addExercise,
+      workoutChange,
+      deleteExercise,
+      createWorkout,
+    };
   },
 };
 </script>
