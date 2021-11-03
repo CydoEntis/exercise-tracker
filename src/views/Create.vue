@@ -141,8 +141,8 @@
                 v-model="item.cardioType"
               >
                 <option value="#">Select Type</option>
-                <option value="run">Run</option>
-                <option value="walk">Walk</option>
+                <option value="Run">Run</option>
+                <option value="Walk">Walk</option>
               </select>
             </div>
             <div class="flex flex-col flex-1">
